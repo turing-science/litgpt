@@ -64,7 +64,7 @@ def setup(
     data: Optional[DataModule] = None,
     train: TrainArgs = TrainArgs(
         save_interval=1000,
-        log_interval=1,
+        log_interval=500,
         global_batch_size=16,
         micro_batch_size=1,
         lr_warmup_steps=100,
