@@ -69,7 +69,7 @@ def setup(
         micro_batch_size=1,
         lr_warmup_steps=100,
         epochs=5,
-        max_seq_length=None,
+        max_seq_length=2000, #None, 2000
         max_time=None,
     ),
     log: LogArgs = LogArgs(),
