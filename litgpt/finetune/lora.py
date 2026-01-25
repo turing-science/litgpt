@@ -197,6 +197,17 @@ def main(
 
     tokenizer = Tokenizer(checkpoint_dir)
     train_dataloader, val_dataloader = get_dataloaders(fabric, data, tokenizer, train)
+
+    # Get the training dataloader
+    print("Printing 100 samples from the training dataset:")
+    for i, batch in enumerate(train_dataloader):
+        if i >= 100:
+            break
+        # Decode the input_ids back to text
+        decoded_input = tokenizer.decode(batch['input_ids'][0])
+        print(f"\n--- Sample {i+1} ---")
+        print(decoded_input)
+    
     steps_per_epoch = len(train_dataloader) // train.gradient_accumulation_iters(devices, num_nodes)
     lr_max_steps = min(train.epochs * steps_per_epoch, (train.max_steps or float("inf")))
 
