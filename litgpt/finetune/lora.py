@@ -325,6 +325,11 @@ def fit(
         validate(fabric, model, val_dataloader, dataclasses.replace(eval, max_iters=2), verbose=False)  # sanity check
         val_loss = "n/a"
 
+        example_num = 20
+        for i in range(example_num):
+          print(f"example {i+1}:")
+          generate_example(fabric, model, tokenizer, eval, data)
+
     train_iterator = CycleIterator(train_dataloader)
     throughput = ThroughputMonitor(fabric, window_size=50)
     running_loss = RunningMean(window=train.gradient_accumulation_iters(devices, num_nodes), sync_on_compute=False).to(
@@ -412,7 +417,14 @@ def fit(
         if not is_accumulating and step_count % eval.interval == 0:
             t0 = time.perf_counter()
             val_loss = validate(fabric, model, val_dataloader, eval)
-            generate_example(fabric, model, tokenizer, eval, data)
+
+
+            example_num = 20
+            for i in range(example_num):
+              print(f"example {i+1}:")
+              generate_example(fabric, model, tokenizer, eval, data)
+            
+
             t1 = time.perf_counter() - t0
 
             val_loss_tensor = val_loss.detach().clone().to(fabric.device)
@@ -488,7 +500,8 @@ def generate_example(fabric: L.Fabric, model: GPT, tokenizer: Tokenizer, eval: E
         model.clear_kv_cache()
         model.train()
         output = tokenizer.decode(output)
-        fabric.print(f"{output}\n")
+        # fabric.print(f"{output}\n")
+        fabric.print(f"Model output: {output}\n")
     else:
         print(
             f"Length of encoded instruction ({len(encoded)}) and eval.max_new_tokens ({eval.max_new_tokens}) "
