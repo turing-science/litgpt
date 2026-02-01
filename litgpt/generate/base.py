@@ -380,7 +380,7 @@ def generate(
     top_k: Optional[int] = None,
     top_p: float = 1.0,
     eos_id: Optional[int] = None,
-    include_prompt: bool = True,
+    include_prompt: bool = False,
 ) -> torch.Tensor:
     """
     Takes a conditioning sequence (prompt) as input and continues to generate as many tokens as requested.
