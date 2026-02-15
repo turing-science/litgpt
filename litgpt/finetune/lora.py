@@ -327,7 +327,7 @@ def fit(
 
         example_num = 20
         for i in range(example_num):
-          print(f"example {i+1}:")
+          print(f"Example {i+1}:")
           generate_example(fabric, model, tokenizer, eval, data)
 
     train_iterator = CycleIterator(train_dataloader)
@@ -421,7 +421,7 @@ def fit(
 
             example_num = 20
             for i in range(example_num):
-              print(f"example {i+1}:")
+              print(f"Example {i+1}:")
               generate_example(fabric, model, tokenizer, eval, data)
             
 
@@ -483,7 +483,7 @@ def validate(
 def generate_example(fabric: L.Fabric, model: GPT, tokenizer: Tokenizer, eval: EvalArgs, data: DataModule):
     instruction = select_sft_generate_example(eval, data)
 
-    fabric.print(instruction)
+    # fabric.print(instruction)
     prompt = data.prompt_style.apply(instruction)
     encoded = tokenizer.encode(prompt, device=fabric.device)
     model.eval()
