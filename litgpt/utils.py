@@ -848,6 +848,7 @@ def create_finetuning_performance_report(training_time, token_counts, device_typ
     return output
 
 
+
 def select_sft_generate_example(eval, data):
     if eval.evaluate_example == "first":
         if len(data.test_dataset.data):
@@ -858,9 +859,21 @@ def select_sft_generate_example(eval, data):
     elif eval.evaluate_example == "random":
         if len(data.test_dataset.data):
             random_idx = random.randint(0, len(data.test_dataset.data) - 1)
+
+            print("Instruction: " + data.test_dataset.data[random_idx]["instruction"])
+            print("Input: " + data.test_dataset.data[random_idx]["input"])
+            print("Expected: " + data.test_dataset.data[random_idx]["output"])
+            print("\n")
+
             instruction = data.test_dataset.data[random_idx]["instruction"]
         else:
             random_idx = random.randint(0, len(data.train_dataset.data) - 1)
+
+            print("Instruction: " + data.test_dataset.data[random_idx]["instruction"])
+            print("Input: " + data.test_dataset.data[random_idx]["input"])
+            print("Expected: " + data.test_dataset.data[random_idx]["output"])
+            print("\n")
+
             instruction = data.train_dataset.data[random_idx]["instruction"]
 
     elif isinstance(eval.evaluate_example, int):
@@ -875,6 +888,7 @@ def select_sft_generate_example(eval, data):
     else:
         raise ValueError(f"Unknown evaluation example type: {eval.evaluate_example}")
     return instruction
+
 
 
 def _RunIf(thunder: bool = False, **kwargs):
