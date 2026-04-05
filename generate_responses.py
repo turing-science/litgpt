@@ -4,19 +4,19 @@ from pathlib import Path
 import requests
 from litgpt import GPT, Config, Tokenizer
 from litgpt.generate.base import generate
-from litgpt.utils import auto_download_checkpoint
+from litgpt.utils import auto_download_checkpoint, lazy_load
 from litgpt.prompts import PromptStyle
 
 
 def load_alpaca_data(num_samples: int = 10):
-    """Load the first num_samples from Alpaca dataset."""
-    url = "https://raw.githubusercontent.com/tloen/alpaca-lora/main/alpaca_data_cleaned_archive.json"
-    download_dir = Path("./data/alpaca")
+    """Load the first num_samples from Alpaca Eval dataset."""
+    url = "https://huggingface.co/datasets/tatsu-lab/alpaca_eval/raw/main/alpaca_eval.json"
+    download_dir = Path("./data/alpaca_eval")
     download_dir.mkdir(parents=True, exist_ok=True)
-    file_path = download_dir / "alpaca_data_cleaned_archive.json"
+    file_path = download_dir / "alpaca_eval.json"
 
     if not file_path.exists():
-        print(f"Downloading Alpaca data to {file_path}")
+        print(f"Downloading Alpaca Eval data to {file_path}")
         response = requests.get(url)
         response.raise_for_status()
         with open(file_path, 'w', encoding='utf-8') as f:
@@ -46,10 +46,11 @@ def generate_responses(checkpoint_dir: str, output_file: str, max_new_tokens: in
     tokenizer = Tokenizer(checkpoint_path)
 
     # Load model
-    with torch.device("cuda" if torch.cuda.is_available() else "cpu"):
-        model = GPT(config)
-        from litgpt.utils import load_checkpoint
-        load_checkpoint(model, checkpoint_path / "lit_model.pth")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = GPT(config).to(device)
+    checkpoint = lazy_load(checkpoint_path / "lit_model.pth")
+    checkpoint = checkpoint.get("model", checkpoint)
+    model.load_state_dict(checkpoint, strict=False)
 
     model.eval()
 
@@ -65,10 +66,13 @@ def generate_responses(checkpoint_dir: str, output_file: str, max_new_tokens: in
         input_text = sample.get("input", "")
 
         # Apply prompt style
-        prompt = prompt_style.apply(instruction, input_text)
+        prompt = prompt_style.apply(instruction, input=input_text)
 
         # Encode
-        encoded = tokenizer.encode(prompt, device=model.device)
+        encoded = tokenizer.encode(prompt, device=device)
+
+        # Prepare KV cache for generation
+        model.set_kv_cache(batch_size=1, max_seq_length=len(encoded) + max_new_tokens, device=device)
 
         # Generate
         with torch.no_grad():
@@ -78,6 +82,8 @@ def generate_responses(checkpoint_dir: str, output_file: str, max_new_tokens: in
                 temperature=0.8,
                 eos_id=tokenizer.eos_id
             )
+
+        model.clear_kv_cache()
 
         # Decode the generated part
         generated_text = tokenizer.decode(output[len(encoded):])
